@@ -1,0 +1,136 @@
+% Copyright 2006 by Till Tantau
+%
+% This file may be distributed and/or modified
+%
+% 1. under the LaTeX Project Public License and/or
+% 2. under the GNU Free Documentation License.
+%
+% See the file doc/generic/pgf/licenses/LICENSE for more details.
+
+\documentclass{ltxdoc}
+\usepackage{luacode}
+% pgf version is defined in \pgfversion in file
+% generic/pgf/utilities/pgfrcs.code.tex 
+
+%\input{../pgfmanual-tex4ht.cfg}
+\input pgfmanual-en-main-preamble.tex
+
+\begin{luacode*}
+local preamble =  [[
+\documentclass{ltxdoc}
+\usepackage{standalone}
+%\usepackage{ltxdoc-fixes}
+\input pgfmanual-en-main-preamble.tex
+\begin{document}
+]]
+
+local stop = [[
+\end{document}
+]]
+local count = 0
+function save(text)
+  local filename = tex.jobname .."-"..count..".tex"
+  print("Writing filename", filename)
+  print(text)
+  local file = io.open(filename,"w")
+  file:write(preamble)
+  file:write(text)
+  file:write(stop)
+  file:close()
+  count = count + 1
+end
+\end{luacode*}
+\makeatletter
+\def\endofcodeexample#1{%
+\endgroup%
+  \ifcode@execute%
+  \fi
+\luaexec{save("\luatexluaescapestring{#1}")}%
+  \par%
+  \endcodeexample\endgroup
+%  \end{codeexample}
+}
+\def\endofcodeexample#1{%
+  \endgroup%
+  \ifcode@execute%
+    \setbox\codeexamplebox=\hbox{%
+      \ifx\code@render\pgfutil@empty%
+      {%
+        {%
+          \returntospace%
+          \commenthandler%
+          \luaexec{save("\luatexluaescapestring{#1}")}%
+          \xdef\code@temp{#1}% removes returns and comments
+        }%
+        \catcode`\^^M=9%
+        \colorbox{graphicbackground}{\color{black}\ignorespaces%
+          \code@pre\expandafter\scantokens\expandafter{\code@temp\ignorespaces}\code@post\ignorespaces}%
+      }%
+      \else%
+        \colorbox{graphicbackground}{\color{black}\ignorespaces%
+          \code@render}%
+      \fi%
+    }%
+    \ifdim\wd\codeexamplebox>\codeexamplewidth%
+      \def\code@start{\par}%
+      \def\code@flushstart{}\def\code@flushend{}%
+      \def\code@mid{\parskip2pt\par\noindent}%
+      \def\code@width{\linewidth-6pt}%
+      \def\code@end{}%
+    \else%
+      \def\code@start{%
+        \linewidth=\textwidth%
+        \parshape \@ne 0pt \linewidth
+        \leavevmode%
+        \hbox\bgroup}%
+      \def\code@flushstart{\hfill}%
+      \def\code@flushend{\hbox{}}%
+      \def\code@mid{\hskip6pt}%
+      \def\code@width{\linewidth-12pt-\codeexamplewidth}%
+      \def\code@end{\egroup}%
+    \fi%
+    \code@start%
+    \noindent%
+    \begin{minipage}[t]{\codeexamplewidth}\raggedright
+      \hrule width0pt%
+      \footnotesize\vskip-1em%
+      \code@flushstart\box\codeexamplebox\code@flushend%
+      \vskip-1ex
+      \leavevmode%
+    \end{minipage}%
+  \else%
+    \def\code@mid{\par}
+    \def\code@width{\linewidth-6pt}
+    \def\code@end{}
+  \fi%
+  \code@mid%  
+  \colorbox{codebackground}{%
+    \pgfkeysvalueof{/codeexample/prettyprint/base color}%
+    \begin{minipage}[t]{\code@width}%
+      {%
+        \let\do\@makeother
+        \dospecials
+        \frenchspacing\@vobeyspaces
+        \normalfont\ttfamily\footnotesize
+        \typesetcomment%
+        \codeexample@tabinit@replacementchars
+        \@tempswafalse
+        \def\par{%
+          \if@tempswa
+          \leavevmode \null \@@par\penalty\interlinepenalty
+          \else
+          \@tempswatrue
+          \ifhmode\@@par\penalty\interlinepenalty\fi
+          \fi}%
+        \obeylines
+        \everypar \expandafter{\the\everypar \unpenalty}%
+        \pgfkeysvalueof{/codeexample/typeset listing/.@cmd}{#1}\pgfeov
+      }
+    \end{minipage}}%
+  \code@end%
+  \par%
+  \medskip
+  \endcodeexample\endgroup
+}
+\makeatother
+\input pgfmanual-en-main-body.tex

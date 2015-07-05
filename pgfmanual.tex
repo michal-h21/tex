@@ -1,0 +1,41 @@
+% Copyright 2006 by Till Tantau
+%
+% This file may be distributed and/or modified
+%
+% 1. under the LaTeX Project Public License and/or
+% 2. under the GNU Free Documentation License.
+%
+% See the file doc/generic/pgf/licenses/LICENSE for more details.
+
+\documentclass{ltxdoc}
+
+% pgf version is defined in \pgfversion in file
+% generic/pgf/utilities/pgfrcs.code.tex 
+
+%\input{../pgfmanual-tex4ht.cfg}
+\usepackage[dvipdfmx]{graphicx}
+\input pgfmanual-en-main-preamble.tex
+\input{../../text-en/pgfmanual-en-main.tex}
+\usetikzlibrary{external}
+\tikzset{
+    tex4ht inc/.style={
+        /pgf/images/include external/.code={%
+            \includegraphics[]{##1.svg}%
+        }
+
+    }
+}
+
+\tikzset{
+ external/system call/.add={}                                                
+      {; inkscape -z -f "\image.pdf" -l "\image.svg"}    
+}
+\makeatletter
+\@ifpackageloaded{tex4ht}{
+    \tikzexternalize[mode=only graphics]
+}{
+    \tikzexternalize
+}
+
+\makeatother
+\input pgfmanual-en-main-body.tex
