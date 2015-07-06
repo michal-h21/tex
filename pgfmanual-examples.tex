@@ -20,10 +20,11 @@ local preamble =  [[
 \documentclass{ltxdoc}
 \usepackage{standalone}
 %\usepackage{ltxdoc-fixes}
+\pagestyle{empty}
 \input pgfmanual-en-main-preamble.tex
 \begin{document}
 ]]
-
+tikzset = nil
 local stop = [[
 \end{document}
 ]]
@@ -31,9 +32,16 @@ local count = 0
 function save(text)
   local filename = tex.jobname .."-"..count..".tex"
   print("Writing filename", filename)
+  if not text:match('begin{tikzpicture}') or not text:match("tikz") then
+    text = "\n\\begin{tikzpicture}\n"..text .. "\n\\end{tikzpicture}"
+  end
   print(text)
   local file = io.open(filename,"w")
   file:write(preamble)
+  if tikzset then
+    file:write("\\tikzset{"..tikzset.."}")
+    tikzset=nil
+  end
   file:write(text)
   file:write(stop)
   file:close()
@@ -50,6 +58,27 @@ end
   \endcodeexample\endgroup
 %  \end{codeexample}
 }
+
+\usepackage{etoolbox}
+\AtBeginDocument{%
+\apptocmd{tikzset}{\luaexec{%
+    tikzset="\luatexluaescapestring{##1}"
+    print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+    print(tikzset)
+  }}{}{}
+}
+
+%\let\oldtikzset=\tikzset
+% 
+% \renewcommand\tikzset[1]{%
+%   \luaexec{tikzset="\luatexluaescapestring{#1}"}%
+%   \oldtikzset{#1}
+% }
+% 
+% this is quite brutal, but we only want to extract examples
+% \renewenvironment{tikzpicture}{%
+%   \def\draw{}\def\path{}\def\coordinate{}\def\shade{}\def\node{}
+% }{}
 \def\endofcodeexample#1{%
   \endgroup%
   \ifcode@execute%
@@ -60,7 +89,7 @@ end
           \returntospace%
           \commenthandler%
           \luaexec{save("\luatexluaescapestring{#1}")}%
-          \xdef\code@temp{#1}% removes returns and comments
+          \xdef\code@temp{}%{#1}% removes returns and comments
         }%
         \catcode`\^^M=9%
         \colorbox{graphicbackground}{\color{black}\ignorespaces%
@@ -124,7 +153,7 @@ end
           \fi}%
         \obeylines
         \everypar \expandafter{\the\everypar \unpenalty}%
-        \pgfkeysvalueof{/codeexample/typeset listing/.@cmd}{#1}\pgfeov
+        %\pgfkeysvalueof{/codeexample/typeset listing/.@cmd}{#1}\pgfeov
       }
     \end{minipage}}%
   \code@end%
