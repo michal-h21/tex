@@ -1,3 +1,8 @@
 #!/bin/bash
 lualatex --interaction=nonstopmode pgfmanual-examples.tex
-for i in pgfmanual-examples-*.tex; do lualatex --interaction=nonstopmode $i; pdf2svg ${i%.tex}.pdf ${i%.tex}.svg; done
+for i in pgfmanual-examples-*.tex
+do 
+   lualatex --interaction=nonstopmode $i
+   pdfcrop ${i%.tex}.pdf ${i%.tex}.pdf
+   pdf2svg ${i%.tex}.pdf ${i%.tex}.svg
+done
